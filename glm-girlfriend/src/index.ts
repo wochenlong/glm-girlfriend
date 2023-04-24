@@ -36,11 +36,12 @@ export const usage = `
 服务器地址输入为t4wefan时，会自动连接到[t4wefan](https://forum.koishi.xyz/u/t4wefan)的公益免费后端（感谢）
 
 ### 更新日志：
-0.6.2：修复了source参数没有发送的错误，不会再显示“无来源的请求，请更新插件”
 
-1.7.0：支持语音输出和加载猫娘
+查看[更新记录](https://github.com/wochenlong/glm-girlfriend)。
 
-1.7.2：增加了文字和语音一起发送的功能
+1.7.4：重置对话/清除记忆 和 加载人设 不受 随机回复频率的影响
+
+
 `;
 
 export interface Config {
@@ -88,6 +89,16 @@ export const Config: Schema<Config> = Schema.object({
 const conversation = new Map<string, Map<string, string>>();
 
 function getReplyCondition(session: Session, config: Config) {
+  const isSpecialCommand =
+    session.content === "加载人设" ||
+    session.content === "重置对话" ||
+    session.content === "清除记忆";
+
+  // 如果当前消息是特殊命令，则直接满足回复条件
+  if (isSpecialCommand) {
+    return true;
+  }
+
   // 如果当前会话的类型为 "group"
   if (session.subtype === "group") {
     // 如果会话内容中包含机器人名字，或者被@了机器人，则满足回复条件
@@ -106,7 +117,6 @@ function getReplyCondition(session: Session, config: Config) {
     return true;
   }
 }
-
 export function apply(ctx: Context, config: Config) {
   // 在 koishi 的中间件栈中添加一个中间件函数
   ctx.middleware(async (session, next) => {
